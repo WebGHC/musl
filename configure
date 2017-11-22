@@ -486,7 +486,7 @@ fi
 #
 tryflag CFLAGS_AUTO -Werror=implicit-function-declaration
 tryflag CFLAGS_AUTO -Werror=implicit-int
-tryflag CFLAGS_AUTO -Werror=pointer-sign
+# tryflag CFLAGS_AUTO -Werror=pointer-sign
 tryflag CFLAGS_AUTO -Werror=pointer-arith
 
 if test "x$warnings" = xyes ; then
