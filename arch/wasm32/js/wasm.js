@@ -2153,14 +2153,6 @@ syscall_fns = {
   }
 }
 
-syscall_numbers = (function() {
-  mapping = {};
-  for (var num in syscall_fns) {
-    mapping[syscall_fns[num].name] = num;
-  }
-  return mapping;
-})();
-
 function syscall(sys, arg1, arg2, arg3, arg4, arg5, arg6) {
   if (debugSyscalls) {
     console.log(syscall_fns[sys].name, arg1, arg2, arg3, arg4, arg5, arg6);
@@ -2204,8 +2196,6 @@ onmessage = function(msg) {
   fetchAndInstantiate(msg.data.progName, importObject).then(function(instance) {
     try {
       setMemory(instance.exports.memory)
-
-      console.log(instance.exports.main);
 
       console.log(instance.exports.main(300));
     } catch (e) {
