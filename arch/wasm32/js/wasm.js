@@ -311,8 +311,17 @@ syscall_fns = {
   },
   45: {
     name: "SYS_brk",
-    fn: function() {
-      throw "SYS_brk NYI";
+    fn: function(addr) {
+      var numPages = Math.ceil(addr / 65536)
+      if (numPages > memory_size_pages) {
+        memory.grow(numPages - memory_size_pages);
+
+	// Is it necessary to call `setMemory` after growing the memory, or is
+	// the `memory.buffer` reference the same? Either way, memory_size_pages
+	// needs to be updated.
+        setMemory(memory);
+      }
+      return heap_size_bytes();
     }
   },
   46: {
