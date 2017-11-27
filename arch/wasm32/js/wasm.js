@@ -18,6 +18,22 @@ function setMemory(m) {
   heap_uint32 = new Uint32Array(heap);
 }
 
+var dec = new TextDecoder();
+function stringFromHeap(ptr, len) {
+  return dec.decode(heap_uint8.slice(ptr, ptr + len));
+}
+
+var stdout__buf = "";
+function stdout__write(str) {
+  var i = str.lastIndexOf("\n");
+  if (i >= 0) {
+    console.log(stdout__buf + str.substring(0, i));
+    stdout__buf = str.substring(i + 1);
+  } else {
+    stdout__buf += str;
+  }
+}
+
 var nanosleepWaiter = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT));
 
 syscall_fns = {
@@ -904,8 +920,23 @@ syscall_fns = {
   },
   146: {
     name: "SYS_writev",
-    fn: function() {
-      throw "SYS_writev NYI";
+    fn: function(fd, iov_, iovcnt) {
+      if (fd == 1) {
+        var iov = iov_ / 4;
+        var rtn = 0;
+        for (var i = 0; i < iovcnt; i++) {
+          var ptr = heap_uint32[iov];
+          iov++;
+          var len = heap_uint32[iov];
+          iov++;
+          if (len > 0) {
+            stdout__write(stringFromHeap(ptr, len));
+            rtn += len;
+          }
+        }
+        return rtn;
+      }
+      return -1;
     }
   },
   147: {
