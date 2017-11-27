@@ -13,10 +13,10 @@ sync.
 
 ## Quick how-to
 
-Build LLVM and Clang from source using
-`-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly`. Build LLD [from
-the `wasm` branch on the `WebAssembly`
-fork](https://github.com/WebAssembly/lld/tree/wasm).
+Build LLVM, Clang, and LLD from source using
+`-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=WebAssembly`. The wasm LLD port
+has been upstreamed into LLD, so the WebAssembly/lld fork is no longer
+necessary.
 
 Set the CC to clang, then use `./configure` and `make` to build musl:
 
