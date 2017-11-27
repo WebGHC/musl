@@ -9,9 +9,7 @@ The goal of this prototype was to get a WebAssembly libc off the ground.
 **Note:** This experimental WebAssembly C library is a hack. Don't
 rely on it. Things are changing rapidly, so mixing different parts of
 the toolchain may break from time to time, try to keep them all in
-sync. In particular, the current WebAssembly design doesn't allow
-sharing heaps between modules. It's a convenience API in the V8
-implementation which may be removed in the future.
+sync.
 
 ## Quick how-to
 
