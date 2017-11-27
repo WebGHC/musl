@@ -348,7 +348,10 @@ syscall_fns = {
   54: {
     name: "SYS_ioctl",
     fn: function() {
-      throw "SYS_ioctl NYI";
+      // TODO: Actually implement this somehow.
+      // It is stubbed here because `musl` calls it as a program starts.
+      console.log("warning: ioctl being ignored");
+      return 0;
     }
   },
   55: {
