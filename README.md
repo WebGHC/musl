@@ -1,4 +1,4 @@
-# WebAssembly experiment for musl libc with limited dynamic linking
+# WebAssembly experiment for musl libc
 
 A [musl experiment][].
 
@@ -6,15 +6,12 @@ A [musl experiment][].
 
 The goal of this prototype was to get a WebAssembly libc off the ground.
 
-1. Focus on the libc aspect, with static linking.
-
-**Note:** This experimental WebAssembly C library with limited dynamic linking
-is a hack. Don't rely on it: it's meant to inform the design of
-WebAssembly. Things are changing rapidly, so mixing different parts of the
-toolchain may break from time to time, try to keep them all in sync. In
-particular, the current WebAssembly design doesn't allow sharing heaps between
-modules. It's a convenience API in the V8 implementation which may be removed in
-the future.
+**Note:** This experimental WebAssembly C library is a hack. Don't
+rely on it. Things are changing rapidly, so mixing different parts of
+the toolchain may break from time to time, try to keep them all in
+sync. In particular, the current WebAssembly design doesn't allow
+sharing heaps between modules. It's a convenience API in the V8
+implementation which may be removed in the future.
 
 ## Quick how-to
 
