@@ -18,6 +18,8 @@ function setMemory(m) {
   heap_uint32 = new Uint32Array(heap);
 }
 
+var nanosleepWaiter = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT));
+
 syscall_fns = {
   // Generted using the following command:
   // grep "^#define SYS_" arch/wasm32/bits/syscall.h | awk '{print $3 ": \"" $2 // "\'," }'
@@ -998,8 +1000,11 @@ syscall_fns = {
   },
   162: {
     name: "SYS_nanosleep",
-    fn: function() {
-      throw "SYS_nanosleep NYI";
+    fn: function(req, ret) {
+      var seconds = heap_uint32[req / Int32Array.BYTES_PER_ELEMENT];
+      var nanoseconds = heap_uint32[(req / Int32Array.BYTES_PER_ELEMENT) + 1];
+      Atomics.wait(nanosleepWaiter, 0, 0, seconds * 1000 + nanoseconds / 1000000);
+      return 0;
     }
   },
   163: {
