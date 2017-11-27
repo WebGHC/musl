@@ -76,6 +76,7 @@ endif
 ifeq ($(ARCH),wasm32)
 CRT_LIBS = lib/crt1.o lib/Scrt1.o lib/rcrt1.o
 ALL_LIBS = $(CRT_LIBS) $(STATIC_LIBS) $(EMPTY_LIBS) $(TOOL_LIBS)
+WASM_SYMS = $(DESTDIR)$(libdir)/wasm.syms
 endif
 
 all: $(ALL_LIBS) $(ALL_TOOLS)
@@ -216,11 +217,14 @@ $(DESTDIR)$(includedir)/%: $(srcdir)/include/%
 $(DESTDIR)$(LDSO_PATHNAME): $(DESTDIR)$(libdir)/libc.so
 	$(INSTALL) -D -l $(libdir)/libc.so $@ || true
 
-install-libs: $(ALL_LIBS:lib/%=$(DESTDIR)$(libdir)/%) $(if $(SHARED_LIBS),$(DESTDIR)$(LDSO_PATHNAME),)
+install-libs: $(ALL_LIBS:lib/%=$(DESTDIR)$(libdir)/%) $(if $(SHARED_LIBS),$(DESTDIR)$(LDSO_PATHNAME),) $(WASM_SYMS)
 
 install-headers: $(ALL_INCLUDES:include/%=$(DESTDIR)$(includedir)/%)
 
 install-tools: $(ALL_TOOLS:obj/%=$(DESTDIR)$(bindir)/%)
+
+$(DESTDIR)$(libdir)/wasm.syms: $(srcdir)/arch/wasm32/wasm.syms
+	$(INSTALL) -D -m 644 $< $@
 
 musl-git-%.tar.gz: .git
 	 git --git-dir=$(srcdir)/.git archive --format=tar.gz --prefix=$(patsubst %.tar.gz,%,$@)/ -o $@ $(patsubst musl-git-%.tar.gz,%,$@)
