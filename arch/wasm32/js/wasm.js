@@ -191,8 +191,8 @@ syscall_fns = {
   },
   25: {
     name: "SYS_stime",
-    fn: function() {
-      throw "SYS_stime NYI";
+    fn: function(t) {
+      return -1; // EPERM
     }
   },
   26: {
