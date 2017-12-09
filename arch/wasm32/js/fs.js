@@ -60,6 +60,10 @@ var fs = {
     return bfs.openSync(pathname, flagsToString(flags), mode);
   },
 
+  creat: function (pathname, mode) {
+    return this.openat(AT_FDCWD, pathname, O_CREAT|O_WRONLY|O_TRUNC, mode);
+  },
+
   read: function (fd, buf, offset, count) {
     var b = utils.uint8Array2Buffer(buf);
     return bfs.readSync(fd, b, offset, count, null);

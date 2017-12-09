@@ -81,9 +81,9 @@ syscall_fns = {
   },
   5: {
     name: "SYS_open",
-    fn: function(filenamePtr, flags, mode) {
-      var filename = stringFromHeap2(filenamePtr);
-      return fs.openat(AT_FDCWD, filename, flags, mode);
+    fn: function(pathnamePtr, flags, mode) {
+      var pathname = stringFromHeap2(pathnamePtr);
+      return fs.openat(AT_FDCWD, pathname, flags, mode);
     }
   },
   6: {
@@ -98,8 +98,9 @@ syscall_fns = {
   },
   8: {
     name: "SYS_creat",
-    fn: function() {
-      throw "SYS_creat NYI";
+    fn: function(pathnamePtr, mode) {
+      var pathname = stringFromHeap2(pathnamePtr);
+      return fs.creat(pathname, mode);
     }
   },
   9: {
