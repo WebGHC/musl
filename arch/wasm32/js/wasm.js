@@ -6,13 +6,15 @@ var heap_uint8;
 var heap_uint32;
 var debugSyscalls = false;
 
+importScripts('node_modules/browserfs/dist/browserfs.js', 'fs.js');
+
 function heap_size_bytes() {
   return memory_size_pages * PAGE_SIZE;
 }
 
 function setMemory(m) {
-  memory = m
-  heap = m.buffer
+  memory = m;
+  heap = m.buffer;
   memory_size_pages = heap.byteLength / PAGE_SIZE;
   heap_uint8 = new Uint8Array(heap);
   heap_uint32 = new Uint32Array(heap);
@@ -21,6 +23,14 @@ function setMemory(m) {
 var dec = new TextDecoder();
 function stringFromHeap(ptr, len) {
   return dec.decode(heap_uint8.slice(ptr, ptr + len));
+}
+
+function stringFromHeap2(ptr) {
+  var end = ptr;
+  while (heap_uint8[end] !== 0) {
+    ++end;
+  }
+  return dec.decode(heap_uint8.slice(ptr, end));
 }
 
 var stdout__buf = "";
@@ -59,27 +69,26 @@ syscall_fns = {
   },
   3: {
     name: "SYS_read",
-    fn: function() {
-      throw "SYS_read NYI";
+    fn: function(fd, bufPtr, count) {
+      return fs.read(fd, heap_uint8, bufPtr, count);
     }
   },
   4: {
     name: "SYS_write",
-    fn: function() {
-      throw "SYS_write NYI";
+    fn: function(fd, bufPtr, count) {
+      return fs.write(fd, heap_uint8, bufPtr, count);
     }
   },
   5: {
     name: "SYS_open",
-    fn: function() {
-      throw "SYS_open NYI";
+    fn: function(filenamePtr, flags, mode) {
+      var filename = stringFromHeap2(filenamePtr);
+      return fs.openat(AT_FDCWD, filename, flags, mode);
     }
   },
   6: {
     name: "SYS_close",
-    fn: function() {
-      throw "SYS_close NYI";
-    }
+    fn: fs.close
   },
   7: {
     name: "SYS_waitpid",
@@ -312,7 +321,7 @@ syscall_fns = {
   45: {
     name: "SYS_brk",
     fn: function(addr) {
-      var numPages = Math.ceil(addr / 65536)
+      var numPages = Math.ceil(addr / 65536);
       if (numPages > memory_size_pages) {
         memory.grow(numPages - memory_size_pages);
 
@@ -1823,8 +1832,8 @@ syscall_fns = {
   },
   295: {
     name: "SYS_openat",
-    fn: function() {
-      throw "SYS_openat NYI";
+    fn: function (dirfd, pathname, flags, mode) {
+      fs.openat(dirfd, pathname, flags, mode);
     }
   },
   296: {
@@ -2195,7 +2204,7 @@ onmessage = function(msg) {
   }
   fetchAndInstantiate(msg.data.progName, importObject).then(function(instance) {
     try {
-      setMemory(instance.exports.memory)
+      setMemory(instance.exports.memory);
 
       console.log(instance.exports.main(300));
     } catch (e) {
