@@ -24,11 +24,10 @@ var dec = new TextDecoder();
 function stringFromHeap(ptr, len) {
   return dec.decode(heap_uint8.slice(ptr, ptr + len));
 }
-
-function stringFromHeap2(ptr) {
-  var end = ptr;
-  while (heap_uint8[end] !== 0) {
-    ++end;
+function heapStr(ptr) {
+  var end = heap_uint8.indexOf(0, ptr);
+  if (end === -1) {
+    throw "heapStr: expected a null-terminated string";
   }
   return dec.decode(heap_uint8.slice(ptr, end));
 }
@@ -82,7 +81,7 @@ syscall_fns = {
   5: {
     name: "SYS_open",
     fn: function(pathnamePtr, flags, mode) {
-      var pathname = stringFromHeap2(pathnamePtr);
+      var pathname = heapStr(pathnamePtr);
       return fs.openat(AT_FDCWD, pathname, flags, mode);
     }
   },
@@ -99,20 +98,23 @@ syscall_fns = {
   8: {
     name: "SYS_creat",
     fn: function(pathnamePtr, mode) {
-      var pathname = stringFromHeap2(pathnamePtr);
+      var pathname = heapStr(pathnamePtr);
       return fs.creat(pathname, mode);
     }
   },
   9: {
     name: "SYS_link",
-    fn: function() {
-      throw "SYS_link NYI";
+    fn: function(oldpathPtr, newpathPtr) {
+      var oldpath = heapStr(oldpathPtr);
+      var newpath = heapStr(newpathPtr);
+      return fs.linkat(AT_FDCWD, oldpath, newpath);
     }
   },
   10: {
     name: "SYS_unlink",
-    fn: function() {
-      throw "SYS_unlink NYI";
+    fn: function(pathnamePtr) {
+      var pathname = heapStr(pathnamePtr);
+      return fs.unlink(pathname);
     }
   },
   11: {
@@ -141,14 +143,16 @@ syscall_fns = {
   },
   15: {
     name: "SYS_chmod",
-    fn: function() {
-      throw "SYS_chmod NYI";
+    fn: function(pathnamePtr, mode) {
+      var pathname = heapStr(pathnamePtr);
+      return fs.chmod(pathname, mode);
     }
   },
   16: {
     name: "SYS_lchown",
-    fn: function() {
-      throw "SYS_lchown NYI";
+    fn: function(pathnamePtr, owner, group) {
+      var pathname = heapStr(pathnamePtr);
+      return fs.chmod(pathname, owner, group);
     }
   },
   17: {
@@ -279,20 +283,24 @@ syscall_fns = {
   },
   38: {
     name: "SYS_rename",
-    fn: function() {
-      throw "SYS_rename NYI";
+    fn: function(oldpathPtr, newpathPtr) {
+      var oldpath = heapStr(oldpathPtr);
+      var newpath = heapStr(newpathPtr);
+      return fs.rename(oldpath, newpath);
     }
   },
   39: {
     name: "SYS_mkdir",
-    fn: function() {
-      throw "SYS_mkdir NYI";
+    fn: function(pathnamePtr, mode) {
+      var pathname = heapStr(pathnamePtr);
+      return fs.mkdirat(AT_FDCWD, pathname, mode);
     }
   },
   40: {
     name: "SYS_rmdir",
-    fn: function() {
-      throw "SYS_rmdir NYI";
+    fn: function(pathnamePtr) {
+      var pathname = heapStr(pathnamePtr);
+      return fs.rmdir(pathname);
     }
   },
   41: {
@@ -561,8 +569,10 @@ syscall_fns = {
   },
   83: {
     name: "SYS_symlink",
-    fn: function() {
-      throw "SYS_symlink NYI";
+    fn: function(targetPtr, linkpathPtr) {
+      var target = heapStr(targetPtr);
+      var linkpath = heapStr(linkpathPtr);
+      return fs.symlinkat(target, AT_FDCWD, linkpath);
     }
   },
   84: {
@@ -573,8 +583,9 @@ syscall_fns = {
   },
   85: {
     name: "SYS_readlink",
-    fn: function() {
-      throw "SYS_readlink NYI";
+    fn: function(pathnamePtr, bufPtr, bufsiz) {
+      var pathname = heapStr(pathnamePtr);
+      return fs.readlinkat(AT_FDCWD, pathname);
     }
   },
   86: {
@@ -615,14 +626,15 @@ syscall_fns = {
   },
   92: {
     name: "SYS_truncate",
-    fn: function() {
-      throw "SYS_truncate NYI";
+    fn: function(pathPtr, length) {
+      var path = heapStr(pathPtr);
+      return fs.truncate(path, length);
     }
   },
   93: {
     name: "SYS_ftruncate",
-    fn: function() {
-      throw "SYS_ftruncate NYI";
+    fn: function(fd, length) {
+      return fs.ftruncate(fd, length);
     }
   },
   94: {
@@ -1833,14 +1845,16 @@ syscall_fns = {
   },
   295: {
     name: "SYS_openat",
-    fn: function (dirfd, pathname, flags, mode) {
-      fs.openat(dirfd, pathname, flags, mode);
+    fn: function (dirfd, pathnamePtr, flags, mode) {
+      var pathname = heapStr(pathnamePtr);
+      return fs.openat(dirfd, pathname, flags, mode);
     }
   },
   296: {
     name: "SYS_mkdirat",
-    fn: function() {
-      throw "SYS_mkdirat NYI";
+    fn: function(dirfd, pathnamePtr, mode) {
+      var pathname = heapStr(pathnamePtr);
+      return fs.mkdirat(dirfd, pathname, mode);
     }
   },
   297: {
@@ -1881,8 +1895,10 @@ syscall_fns = {
   },
   303: {
     name: "SYS_linkat",
-    fn: function() {
-      throw "SYS_linkat NYI";
+    fn: function(dirfd, oldpathPtr, newpathPtr) {
+      var oldpath = heapStr(oldpathPtr);
+      var newpath = heapStr(newpathPtr);
+      return fs.linkat(dirfd, oldpath, newpath);
     }
   },
   304: {
@@ -1893,8 +1909,9 @@ syscall_fns = {
   },
   305: {
     name: "SYS_readlinkat",
-    fn: function() {
-      throw "SYS_readlinkat NYI";
+    fn: function(dirfd, pathnamePtr, bufPtr, bufsiz) {
+      var pathname = heapStr(pathnamePtr);
+      return fs.readlinkat(dirfd, pathname);
     }
   },
   306: {

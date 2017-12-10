@@ -1,7 +1,7 @@
 BrowserFS.configure({
   fs: "MountableFileSystem",
   options: {
-    "/tmp": { fs: "InMemory" }
+    "/": { fs: "InMemory" }
   }
 }, function (e) {
   if (e) {
@@ -75,6 +75,67 @@ var fs = {
   },
 
   close: function (fd) {
-    return bfs.close(fd);
+    return bfs.closeSync(fd);
+  },
+
+  linkat: function (dirfd, oldpath, newpath) {
+    if (dirfd !== AT_FDCWD) {
+      console.log('linkat: TODO: dirfd other than AT_FDCWD, ignoring');
+    }
+    return bfs.linkSync(oldpath, newpath);
+  },
+
+  unlink: function (pathname) {
+    return bfs.unlinkSync(pathname);
+  },
+
+  mkdirat: function (dirfd, pathname, mode) {
+    if (dirfd !== AT_FDCWD) {
+      console.log('linkat: TODO: dirfd other than AT_FDCWD, ignoring');
+    }
+    return bfs.mkdirSync(pathname, mode);
+  },
+
+  rmdir: function(pathname) {
+    return bfs.rmdirSync(pathname);
+  },
+
+  chmod: function (pathname, mode) {
+    return bfs.chmodSync(pathname, mode);
+  },
+
+  chown: function (pathname, owner, group) {
+    return bfs.chownSync(pathname, false, owner, group);
+  },
+
+  lchown: function (pathname, owner, group) {
+    return bfs.chownSync(pathname, true, owner, group);
+  },
+
+  rename: function (oldpath, newpath) {
+    return bfs.renameSync(oldpath, newpath);
+  },
+
+  symlinkat: function (target, newdirfd, linkpath) {
+    if (dirfd !== AT_FDCWD) {
+      console.log('symlinkat: TODO: dirfd other than AT_FDCWD, ignoring');
+    }
+    return bfs.symlinkSync(target, linkpath, '');
+  },
+
+  readlinkat: function (dirfd, pathname) {
+    if (dirfd !== AT_FDCWD) {
+      console.log('readlinkat: TODO: dirfd other than AT_FDCWD, ignoring');
+    }
+    return bfs.readlinkSync(pathname);
+  },
+
+  truncate: function (pathPtr, length) {
+    var path = heapStr(pathPtr);
+    return bfs.truncate(path, length);
+  },
+
+  ftruncate: function (fd, length) {
+    return bfs.ftruncate(fd, length);
   }
 };
