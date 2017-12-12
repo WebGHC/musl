@@ -14,15 +14,24 @@ var bfs = BrowserFS.BFSRequire('fs');
 var utils = BrowserFS.BFSRequire('bfs_utils');
 
 var AT_FDCWD = -100;
+var AT_SYMLINK_NOFOLLOW   = 0x100;
+var AT_REMOVEDIR          = 0x200;
+var AT_SYMLINK_FOLLOW     = 0x400;
+var AT_NO_AUTOMOUNT       = 0x800;
+var AT_EMPTY_PATH         = 0x1000;
+var AT_STATX_SYNC_TYPE    = 0x6000;
+var AT_STATX_SYNC_AS_STAT = 0x0000;
+var AT_STATX_FORCE_SYNC   = 0x2000;
+var AT_STATX_DONT_SYNC    = 0x4000;
 
 // open flags
 var O_APPEND = 0x400;
-var O_CREAT = 0x40;
-var O_EXCL = 0x80;
+var O_CREAT  = 0x40;
+var O_EXCL   = 0x80;
 var O_RDONLY = 0x00;
-var O_RDWR = 0x02;
-var O_SYNC = 0x1000;
-var O_TRUNC = 0x200;
+var O_RDWR   = 0x02;
+var O_SYNC   = 0x1000;
+var O_TRUNC  = 0x200;
 var O_WRONLY = 0x01;
 
 // BrowserFS only supports string flags. See:
@@ -52,12 +61,25 @@ function flagsToString(a) {
   throw 'flagToString: Invalid flag value';
 }
 
+// on error a syscall should return -ERRNOVAL (see linux syscall abi)
+function catchApiError(f) {
+  try {
+    return f();
+  } catch (e) {
+    if (e instanceof BrowserFS.Errors.ApiError) {
+      return -e.errno;
+    } else {
+      throw e;
+    }
+  }
+}
+
 var fs = {
   openat: function (dirfd, pathname, flags, mode) {
     if (dirfd !== AT_FDCWD) {
       console.log('openat: TODO: dirfd other than AT_FDCWD, ignoring');
     }
-    return bfs.openSync(pathname, flagsToString(flags), mode);
+    return catchApiError(() => bfs.openSync(pathname, flagsToString(flags), mode));
   },
 
   creat: function (pathname, mode) {
@@ -66,76 +88,87 @@ var fs = {
 
   read: function (fd, buf, offset, count) {
     var b = utils.uint8Array2Buffer(buf);
-    return bfs.readSync(fd, b, offset, count, null);
+    return catchApiError(() => bfs.readSync(fd, b, offset, count, null));
   },
 
   write: function (fd, buf, offset, count) {
     var b = utils.uint8Array2Buffer(buf);
-    return bfs.writeSync(fd, b, offset, count, null);
+    return catchApiError(() => bfs.writeSync(fd, b, offset, count, null));
   },
 
   close: function (fd) {
-    return bfs.closeSync(fd);
+    return catchApiError(() => bfs.closeSync(fd));
   },
 
   linkat: function (dirfd, oldpath, newpath) {
     if (dirfd !== AT_FDCWD) {
       console.log('linkat: TODO: dirfd other than AT_FDCWD, ignoring');
     }
-    return bfs.linkSync(oldpath, newpath);
+    return catchApiError(() => bfs.linkSync(oldpath, newpath));
   },
 
   unlink: function (pathname) {
-    return bfs.unlinkSync(pathname);
+    return catchApiError(() => bfs.unlinkSync(pathname));
+  },
+
+  unlinkat: function (dirfd, pathname, flags) {
+    if (difd !== AT_FDCWD) {
+      console.log('unlinkat: TODO: dirfd other than AT_FDCWD, ignoring');
+    }
+    if (flags & AT_REMOVEDIR) {
+      return this.rmdir(pathname);
+    } else {
+      return this.unlink(pathname);
+    }
   },
 
   mkdirat: function (dirfd, pathname, mode) {
     if (dirfd !== AT_FDCWD) {
       console.log('linkat: TODO: dirfd other than AT_FDCWD, ignoring');
     }
-    return bfs.mkdirSync(pathname, mode);
+    return catchApiError(() => bfs.mkdirSync(pathname, mode));
   },
 
   rmdir: function(pathname) {
-    return bfs.rmdirSync(pathname);
+    return catchApiError(() => bfs.rmdirSync(pathname));
   },
 
   chmod: function (pathname, mode) {
-    return bfs.chmodSync(pathname, mode);
+    return catchApiError(() => bfs.chmodSync(pathname, mode));
   },
 
   chown: function (pathname, owner, group) {
-    return bfs.chownSync(pathname, false, owner, group);
+    return catchApiError(() => bfs.chownSync(pathname, false, owner, group));
   },
 
   lchown: function (pathname, owner, group) {
-    return bfs.chownSync(pathname, true, owner, group);
+    return catchApiError(() => bfs.chownSync(pathname, true, owner, group));
   },
 
   rename: function (oldpath, newpath) {
-    return bfs.renameSync(oldpath, newpath);
+    return catchApiError(() => bfs.renameSync(oldpath, newpath));
   },
 
   symlinkat: function (target, newdirfd, linkpath) {
     if (dirfd !== AT_FDCWD) {
       console.log('symlinkat: TODO: dirfd other than AT_FDCWD, ignoring');
     }
-    return bfs.symlinkSync(target, linkpath, '');
+    return catchApiError(() => bfs.symlinkSync(target, linkpath, ''));
   },
 
   readlinkat: function (dirfd, pathname) {
     if (dirfd !== AT_FDCWD) {
       console.log('readlinkat: TODO: dirfd other than AT_FDCWD, ignoring');
     }
-    return bfs.readlinkSync(pathname);
+    return catchApiError(() => bfs.readlinkSync(pathname));
   },
 
   truncate: function (pathPtr, length) {
     var path = heapStr(pathPtr);
-    return bfs.truncate(path, length);
+    return catchApiError(() => bfs.truncate(path, length));
   },
 
   ftruncate: function (fd, length) {
-    return bfs.ftruncate(fd, length);
+    return catchApiError(() => bfs.ftruncate(fd, length));
   }
 };

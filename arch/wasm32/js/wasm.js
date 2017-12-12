@@ -158,6 +158,7 @@ syscall_fns = {
   17: {
     name: "SYS_break",
     fn: function() {
+      // not implemented in the Linux kernel
       throw "SYS_break NYI";
     }
   },
@@ -242,12 +243,14 @@ syscall_fns = {
   31: {
     name: "SYS_stty",
     fn: function() {
+      // not implemented in the Linux kernel
       throw "SYS_stty NYI";
     }
   },
   32: {
     name: "SYS_gtty",
     fn: function() {
+      // not implemented in the Linux kernel
       throw "SYS_gtty NYI";
     }
   },
@@ -266,6 +269,7 @@ syscall_fns = {
   35: {
     name: "SYS_ftime",
     fn: function() {
+      // not implemented in the Linux kernel
       throw "SYS_ftime NYI";
     }
   },
@@ -324,6 +328,7 @@ syscall_fns = {
   44: {
     name: "SYS_prof",
     fn: function() {
+      // not implemented in the Linux kernel
       throw "SYS_prof NYI";
     }
   },
@@ -387,6 +392,7 @@ syscall_fns = {
   53: {
     name: "SYS_lock",
     fn: function() {
+      // not implemented in the Linux kernel
       throw "SYS_lock NYI";
     }
   },
@@ -408,6 +414,7 @@ syscall_fns = {
   56: {
     name: "SYS_mpx",
     fn: function() {
+      // not implemented in the Linux kernel
       throw "SYS_mpx NYI";
     }
   },
@@ -420,6 +427,7 @@ syscall_fns = {
   58: {
     name: "SYS_ulimit",
     fn: function() {
+      // not implemented in the Linux kernel
       throw "SYS_ulimit NYI";
     }
   },
@@ -898,6 +906,7 @@ syscall_fns = {
   137: {
     name: "SYS_afs_syscall",
     fn: function() {
+      // not implemented in the Linux kernel
       throw "SYS_afs_syscall NYI";
     }
   },
@@ -1222,12 +1231,14 @@ syscall_fns = {
   188: {
     name: "SYS_getpmsg",
     fn: function() {
+      // not implemented in the Linux kernel
       throw "SYS_getpmsg NYI";
     }
   },
   189: {
     name: "SYS_putpmsg",
     fn: function() {
+      // not implemented in the Linux kernel
       throw "SYS_putpmsg NYI";
     }
   },
@@ -1414,6 +1425,7 @@ syscall_fns = {
   219: {
     name: "SYS_madvise1",
     fn: function() {
+      // not implemented in the Linux kernel
       throw "SYS_madvise1 NYI";
     }
   },
@@ -1720,6 +1732,7 @@ syscall_fns = {
   273: {
     name: "SYS_vserver",
     fn: function() {
+      // not implemented in the Linux kernel
       throw "SYS_vserver NYI";
     }
   },
@@ -1883,8 +1896,9 @@ syscall_fns = {
   },
   301: {
     name: "SYS_unlinkat",
-    fn: function() {
-      throw "SYS_unlinkat NYI";
+    fn: function(dirfd, pathnamePtr, flags) {
+      var pathname = heapStr(pathnamePtr);
+      return fs.unlinkat(dirfd, pathanme, flags);
     }
   },
   302: {
