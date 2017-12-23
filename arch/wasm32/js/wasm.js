@@ -192,7 +192,7 @@ syscall_fns = {
   25: {
     name: "SYS_stime",
     fn: function(t) {
-      return -1; // EPERM
+      return -EPERM;
     }
   },
   26: {
