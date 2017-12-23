@@ -6,7 +6,7 @@ var heap_uint8;
 var heap_uint32;
 var debugSyscalls = false;
 
-importScripts('node_modules/browserfs/dist/browserfs.js', 'include/errno.js', 'fs.js');
+importScripts('node_modules/browserfs/dist/browserfs.js', 'include/errno.js', 'util.js', 'fs.js');
 
 function heap_size_bytes() {
   return memory_size_pages * PAGE_SIZE;
@@ -20,27 +20,12 @@ function setMemory(m) {
   heap_uint32 = new Uint32Array(heap);
 }
 
-var dec = new TextDecoder();
-function stringFromHeap(ptr, len) {
-  return dec.decode(heap_uint8.slice(ptr, ptr + len));
-}
 function heapStr(ptr) {
   var end = heap_uint8.indexOf(0, ptr);
   if (end === -1) {
     throw "heapStr: expected a null-terminated string";
   }
-  return dec.decode(heap_uint8.slice(ptr, end));
-}
-
-var stdout__buf = "";
-function stdout__write(str) {
-  var i = str.lastIndexOf("\n");
-  if (i >= 0) {
-    console.log(stdout__buf + str.substring(0, i));
-    stdout__buf = str.substring(i + 1);
-  } else {
-    stdout__buf += str;
-  }
+  return bufStr(heap_uint8, ptr, end);
 }
 
 var nanosleepWaiter = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT));
@@ -952,29 +937,50 @@ syscall_fns = {
   },
   145: {
     name: "SYS_readv",
-    fn: function() {
-      throw "SYS_readv NYI";
+    fn: function(fd, iov_, iovcnt) {
+      var iov = iov_ / 4;
+      var rtn = 0;
+      for (var i = 0; i < iovcnt; i++) {
+        var ptr = heap_uint32[iov];
+        iov++;
+        var len = heap_uint32[iov];
+        iov++;
+        if (len > 0) {
+          var r = fs.read(fd, heap_uint8, ptr, len);
+          if (r < 0) {
+            return r;
+          } else if (r < len) {
+            return rtn + r;
+          }
+
+          rtn += r;
+        }
+      }
+      return rtn;
     }
   },
   146: {
     name: "SYS_writev",
     fn: function(fd, iov_, iovcnt) {
-      if (fd == 1) {
-        var iov = iov_ / 4;
-        var rtn = 0;
-        for (var i = 0; i < iovcnt; i++) {
-          var ptr = heap_uint32[iov];
-          iov++;
-          var len = heap_uint32[iov];
-          iov++;
-          if (len > 0) {
-            stdout__write(stringFromHeap(ptr, len));
-            rtn += len;
+      var iov = iov_ / 4;
+      var rtn = 0;
+      for (var i = 0; i < iovcnt; i++) {
+        var ptr = heap_uint32[iov];
+        iov++;
+        var len = heap_uint32[iov];
+        iov++;
+        if (len > 0) {
+          var r = fs.write(fd, heap_uint8, ptr, len);
+          if (r < 0) {
+            return r;
+          } else if (r < len) {
+            return rtn + r;
           }
+
+          rtn += r;
         }
-        return rtn;
       }
-      return -1;
+      return rtn;
     }
   },
   147: {

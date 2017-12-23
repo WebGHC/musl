@@ -108,8 +108,15 @@ var fs = {
   },
 
   write: function (fd, buf, offset, count) {
-    var b = utils.uint8Array2Buffer(buf);
-    return catchApiError(() => bfs.writeSync(fd, b, offset, count, null));
+    // stdout is handled specially here, we may have a more robust solution
+    // in the future that does not assume stdout is connected to console
+    if (fd === 1) {
+      stdout__write(bufStr(buf, offset, offset + count));
+      return count;
+    } else {
+      var b = utils.uint8Array2Buffer(buf);
+      return catchApiError(() => bfs.writeSync(fd, b, offset, count, null));
+    }
   },
 
   close: function (fd) {
