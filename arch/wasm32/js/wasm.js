@@ -6,7 +6,7 @@ var heap_uint8;
 var heap_uint32;
 var debugSyscalls = false;
 
-importScripts('node_modules/browserfs/dist/browserfs.js', 'fs.js');
+importScripts('node_modules/browserfs/dist/browserfs.js', 'include/errno.js', 'fs.js');
 
 function heap_size_bytes() {
   return memory_size_pages * PAGE_SIZE;
@@ -641,9 +641,7 @@ syscall_fns = {
   },
   93: {
     name: "SYS_ftruncate",
-    fn: function(fd, length) {
-      return fs.ftruncate(fd, length);
-    }
+    fn: fs.ftruncate
   },
   94: {
     name: "SYS_fchmod",

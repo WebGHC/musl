@@ -1,3 +1,20 @@
+var bfs = BrowserFS.BFSRequire('fs');
+var utils = BrowserFS.BFSRequire('bfs_utils');
+
+// Certain directories are required by POSIX (and musl). In case there is an
+// in memory filesystem under root we need to take care to create these manually.
+// See musl manual for details.
+function initRootFs() {
+  var ds = [ "/bin"
+           , "/etc"
+           , "/etc/zoneinfo"
+           , "/dev"
+           , "/dev/shm"
+           , "/tmp"
+           ];
+  ds.forEach(d => bfs.mkdirSync(d, 511 /*=0777*/));
+}
+
 BrowserFS.configure({
   fs: "MountableFileSystem",
   options: {
@@ -8,12 +25,11 @@ BrowserFS.configure({
     console.log('Failed to initialize BrowserFS');
     throw e;
   }
+
+  initRootFs();
 });
 
-var bfs = BrowserFS.BFSRequire('fs');
-var utils = BrowserFS.BFSRequire('bfs_utils');
-
-var AT_FDCWD = -100;
+var AT_FDCWD              = -0x64;
 var AT_SYMLINK_NOFOLLOW   = 0x100;
 var AT_REMOVEDIR          = 0x200;
 var AT_SYMLINK_FOLLOW     = 0x400;
