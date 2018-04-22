@@ -2,6 +2,7 @@
 _Exit
 abort
 puts
+__wasm_host_main
 
 # Musl syscall interface, provided by wasm.js
 __syscall

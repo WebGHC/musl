@@ -63,7 +63,7 @@ static void libc_start_init(void)
 
 weak_alias(libc_start_init, __libc_start_init);
 
-int __libc_start_main(int (*main)(int,char **,char **), int argc, char **argv)
+int __libc_start_main(int (*main)(int,char **,char **), int argc, char **argv, void *x, void *y, void *z)
 {
 	char **envp = argv+argc+1;
 
