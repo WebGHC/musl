@@ -20,7 +20,16 @@ struct history
 #undef dirfd
 #define dirfd(d) (*(int *)d)
 
-static int do_nftw(char *path, int (*fn)(const char *, const struct stat *, int, struct FTW *), int fd_limit, int flags, struct history *h)
+static int choose_fn(int useFn1, int (*fn1)(const char *, const struct stat *, int), int (*fn2)(const char *, const struct stat *, int, struct FTW *), const char *path, const struct stat *st, int type, struct FTW *lev)
+{
+	if (useFn1) {
+		return fn1(path, st, type);
+	} else {
+		return fn2(path, st, type, lev);
+	}
+}
+
+static int do_nftw(char *path, int useFn1, int (*fn1)(const char *, const struct stat *, int), int (*fn2)(const char *, const struct stat *, int, struct FTW *), int fd_limit, int flags, struct history *h)
 {
 	size_t l = strlen(path), j = l && path[l-1]=='/' ? l-1 : l;
 	struct stat st;
@@ -58,7 +67,7 @@ static int do_nftw(char *path, int (*fn)(const char *, const struct stat *, int,
 	lev.level = new.level;
 	lev.base = h ? h->base : (name=strrchr(path, '/')) ? name-path : 0;
 
-	if (!(flags & FTW_DEPTH) && (r=fn(path, &st, type, &lev)))
+	if (!(flags & FTW_DEPTH) && (r=choose_fn(useFn1, fn1, fn2, path, &st, type, &lev)))
 		return r;
 
 	for (; h; h = h->chain)
@@ -81,7 +90,7 @@ static int do_nftw(char *path, int (*fn)(const char *, const struct stat *, int,
 				}
 				path[j]='/';
 				strcpy(path+j+1, de->d_name);
-				if ((r=do_nftw(path, fn, fd_limit-1, flags, &new))) {
+				if ((r=do_nftw(path, useFn1, fn1, fn2, fd_limit-1, flags, &new))) {
 					closedir(d);
 					return r;
 				}
@@ -93,13 +102,13 @@ static int do_nftw(char *path, int (*fn)(const char *, const struct stat *, int,
 	}
 
 	path[l] = 0;
-	if ((flags & FTW_DEPTH) && (r=fn(path, &st, type, &lev)))
+	if ((flags & FTW_DEPTH) && (r=choose_fn(useFn1, fn1, fn2, path, &st, type, &lev)))
 		return r;
 
 	return 0;
 }
 
-int nftw(const char *path, int (*fn)(const char *, const struct stat *, int, struct FTW *), int fd_limit, int flags)
+int nftw_impl(const char *path, int useFn1, int (*fn1)(const char *, const struct stat *, int), int (*fn2)(const char *, const struct stat *, int, struct FTW *), int fd_limit, int flags)
 {
 	int r, cs;
 	size_t l;
@@ -115,9 +124,14 @@ int nftw(const char *path, int (*fn)(const char *, const struct stat *, int, str
 	memcpy(pathbuf, path, l+1);
 	
 	pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &cs);
-	r = do_nftw(pathbuf, fn, fd_limit, flags, NULL);
+	r = do_nftw(pathbuf, useFn1, fn1, fn2, fd_limit, flags, NULL);
 	pthread_setcancelstate(cs, 0);
 	return r;
+}
+
+int nftw(const char *path, int (*fn)(const char *, const struct stat *, int, struct FTW *), int fd_limit, int flags)
+{
+  return nftw_impl(path, 0, 0, fn, fd_limit, flags);
 }
 
 LFS64(nftw);

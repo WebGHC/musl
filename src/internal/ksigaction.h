@@ -8,4 +8,4 @@ struct k_sigaction {
 	unsigned mask[2];
 };
 
-void __restore(), __restore_rt();
+void __restore(void), __restore_rt(void);

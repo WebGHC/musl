@@ -7,6 +7,8 @@
 
 #include "crt_arch.h"
 
+#ifndef __wasm__
+
 #ifndef GETFUNCSYM
 #define GETFUNCSYM(fp, sym, got) do { \
 	__attribute__((__visibility__("hidden"))) void sym(); \
@@ -144,3 +146,5 @@ void _dlstart_c(size_t *sp, size_t *dynv)
 	GETFUNCSYM(&dls2, __dls2, base+dyn[DT_PLTGOT]);
 	dls2((void *)base, sp);
 }
+
+#endif // ifndef __wasm__

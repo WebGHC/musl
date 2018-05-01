@@ -2,9 +2,9 @@
 #include "libc.h"
 
 __attribute__((__visibility__("hidden")))
-ptrdiff_t __tlsdesc_static(), __tlsdesc_dynamic();
+ptrdiff_t __tlsdesc_static(void), __tlsdesc_dynamic(void);
 
-ptrdiff_t __tlsdesc_static()
+ptrdiff_t __tlsdesc_static(void)
 {
 	return 0;
 }

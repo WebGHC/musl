@@ -5,9 +5,7 @@
 #include "libc.h"
 
 __attribute__((__visibility__("hidden")))
-long __cancel(), __syscall_cp_asm(), __syscall_cp_c();
-
-long __cancel()
+long __cancel(void)
 {
 	pthread_t self = __pthread_self();
 	if (self->canceldisable == PTHREAD_CANCEL_ENABLE || self->cancelasync)
@@ -16,10 +14,12 @@ long __cancel()
 	return -ECANCELED;
 }
 
+__attribute__((__visibility__("hidden")))
 long __syscall_cp_asm(volatile void *, syscall_arg_t,
                       syscall_arg_t, syscall_arg_t, syscall_arg_t,
                       syscall_arg_t, syscall_arg_t, syscall_arg_t);
 
+__attribute__((__visibility__("hidden")))
 long __syscall_cp_c(syscall_arg_t nr,
                     syscall_arg_t u, syscall_arg_t v, syscall_arg_t w,
                     syscall_arg_t x, syscall_arg_t y, syscall_arg_t z)

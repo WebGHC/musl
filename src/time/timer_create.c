@@ -19,7 +19,7 @@ static void dummy_1(pthread_t self)
 }
 weak_alias(dummy_1, __pthread_tsd_run_dtors);
 
-void __reset_tls();
+void __reset_tls(void);
 
 static void cleanup_fromsig(void *p)
 {
