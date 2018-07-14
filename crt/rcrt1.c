@@ -4,7 +4,10 @@
 #include "../ldso/dlstart.c"
 
 #ifdef __wasm__
-int __wasm_host_main(int,char **, char **);
+int main(int,char **);
+int __wasm_host_main(int argc, char **argv, char **env) {
+  return main(argc, argv);
+}
 #else
 int main(int,char **,char **);
 #endif
